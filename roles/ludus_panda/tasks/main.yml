@@ -1,0 +1,76 @@
+---
+- name: Validate supported platform
+  ansible.builtin.assert:
+    that:
+      - ansible_os_family == 'Debian'
+    fail_msg: "This role currently supports Debian-family Linux targets only."
+
+- name: Install APT dependencies
+  ansible.builtin.apt:
+    name: "{{ ludus_panda_apt_packages }}"
+    state: present
+    update_cache: true
+  when: ludus_panda_install_dependencies
+
+- name: Resolve latest PANDA version metadata
+  ansible.builtin.uri:
+    url: "{{ ludus_panda_github_latest_api }}"
+    method: GET
+    return_content: true
+    status_code: 200
+  register: ludus_panda_latest_release
+  when: ludus_panda_version == 'latest'
+
+- name: Set effective PANDA version
+  ansible.builtin.set_fact:
+    ludus_panda_effective_version: >-
+      {{
+        (ludus_panda_latest_release.json.tag_name)
+        if ludus_panda_version == 'latest'
+        else ludus_panda_version
+      }}
+
+- name: Build PANDA download URL
+  ansible.builtin.set_fact:
+    ludus_panda_release_url: >-
+      https://github.com/panda-re/panda/releases/download/{{ ludus_panda_effective_version }}/panda-{{ ludus_panda_effective_version }}-linux-{{ ludus_panda_arch }}.tar.gz
+
+- name: Ensure PANDA install directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop:
+    - "{{ ludus_panda_install_dir }}"
+    - "{{ ludus_panda_bin_dir }}"
+
+- name: Download PANDA release archive
+  ansible.builtin.get_url:
+    url: "{{ ludus_panda_release_url }}"
+    dest: "/tmp/panda-{{ ludus_panda_effective_version }}-linux-{{ ludus_panda_arch }}.tar.gz"
+    mode: "0644"
+    checksum: "{{ ludus_panda_archive_checksum if ludus_panda_archive_checksum | length > 0 else omit }}"
+
+- name: Extract PANDA archive
+  ansible.builtin.unarchive:
+    src: "/tmp/panda-{{ ludus_panda_effective_version }}-linux-{{ ludus_panda_arch }}.tar.gz"
+    dest: "{{ ludus_panda_install_dir }}"
+    remote_src: true
+    extra_opts:
+      - --strip-components=1
+
+- name: Ensure PANDA profile script is present
+  ansible.builtin.template:
+    src: panda.sh.j2
+    dest: /etc/profile.d/panda.sh
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Install pandare python package
+  ansible.builtin.pip:
+    name: "{{ ludus_panda_pandare_package }}"
+    state: present
+  when: ludus_panda_install_pandare
