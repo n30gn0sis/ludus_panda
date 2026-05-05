@@ -6,10 +6,9 @@ Installs [PANDA](https://panda.re/) onto Debian/Ubuntu systems for Ludus environ
 
 See `defaults/main.yml` for all variables. Common options:
 
-- `ludus_panda_version`: PANDA release tag (for example `v0.0.0`) or `latest`
+- `ludus_panda_version`: PANDA release version (without leading `v`) or `latest`
 - `ludus_panda_arch`: release architecture suffix (`amd64`, `arm64`, etc.)
 - `ludus_panda_install_dir`: installation directory (default `/opt/panda`)
-- `ludus_panda_archive_checksum`: optional checksum (`sha256:<hex>`) for deterministic verification
 - `ludus_panda_install_pandare`: install Python `pandare` package
 
 ## Example Playbook
