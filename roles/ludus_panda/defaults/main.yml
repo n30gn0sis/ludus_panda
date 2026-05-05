@@ -1,0 +1,33 @@
+---
+# Version of PANDA to install. Set to "latest" to always pull the newest GitHub release.
+ludus_panda_version: "latest"
+
+# CPU architecture suffix used by PANDA release assets.
+# Valid values generally include amd64 and arm64.
+ludus_panda_arch: "amd64"
+
+# URL used to download PANDA release archives.
+ludus_panda_release_url: "https://github.com/panda-re/panda/releases/{{ 'latest/download' if ludus_panda_version == 'latest' else 'download/v' ~ ludus_panda_version }}/panda-{{ ludus_panda_version if ludus_panda_version != 'latest' else 'latest' }}-linux-{{ ludus_panda_arch }}.tar.gz"
+
+# Installation path for PANDA binaries.
+ludus_panda_install_dir: "/opt/panda"
+
+# Directory exposed on PATH via profile script.
+ludus_panda_bin_dir: "{{ ludus_panda_install_dir }}/bin"
+
+# Whether to install build/runtime dependencies.
+ludus_panda_install_dependencies: true
+
+# Additional apt dependencies for PANDA runtime and common tooling.
+ludus_panda_apt_packages:
+  - curl
+  - tar
+  - ca-certificates
+  - python3
+  - python3-pip
+
+# Whether to install pandare (Python bindings).
+ludus_panda_install_pandare: true
+
+# pip package spec for pandare.
+ludus_panda_pandare_package: "pandare"

@@ -1,0 +1,22 @@
+---
+galaxy_info:
+  role_name: ludus_panda
+  author: Ludus Community
+  description: Install PANDA (Platform for Architecture-Neutral Dynamic Analysis).
+  license: MIT
+  min_ansible_version: "2.14"
+  platforms:
+    - name: Debian
+      versions:
+        - bullseye
+        - bookworm
+    - name: Ubuntu
+      versions:
+        - jammy
+        - noble
+  galaxy_tags:
+    - ludus
+    - panda
+    - malware
+    - analysis
+dependencies: []
