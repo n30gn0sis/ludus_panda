@@ -5,12 +5,27 @@
       - ansible_os_family == 'Debian'
     fail_msg: "This role currently supports Debian-family Linux targets only."
 
+- name: Validate install method
+  ansible.builtin.assert:
+    that:
+      - ludus_panda_install_method in ['binary', 'source', 'container']
+    fail_msg: "ludus_panda_install_method must be one of: binary, source, container"
+
 - name: Install APT dependencies
   ansible.builtin.apt:
     name: "{{ ludus_panda_apt_packages }}"
     state: present
     update_cache: true
   when: ludus_panda_install_dependencies
+
+- name: Install source-build dependencies
+  ansible.builtin.apt:
+    name: "{{ ludus_panda_source_apt_packages }}"
+    state: present
+    update_cache: true
+  when:
+    - ludus_panda_install_dependencies
+    - ludus_panda_install_method == 'source'
 
 - name: Ensure PANDA install directories exist
   ansible.builtin.file:
@@ -22,12 +37,16 @@
   loop:
     - "{{ ludus_panda_install_dir }}"
     - "{{ ludus_panda_bin_dir }}"
+  when: ludus_panda_install_method == 'binary'
 
 - name: Download PANDA release archive
   ansible.builtin.get_url:
     url: "{{ ludus_panda_release_url }}"
     dest: "/tmp/panda-{{ ludus_panda_version }}-linux-{{ ludus_panda_arch }}.tar.gz"
+    checksum: "{{ ludus_panda_checksum if ludus_panda_checksum else omit }}"
+    force: "{{ ludus_panda_force_reinstall }}"
     mode: "0644"
+  when: ludus_panda_install_method == 'binary'
 
 - name: Extract PANDA archive
   ansible.builtin.unarchive:
@@ -36,6 +55,7 @@
     remote_src: true
     extra_opts:
       - --strip-components=1
+  when: ludus_panda_install_method == 'binary'
 
 - name: Ensure PANDA profile script is present
   ansible.builtin.template:
@@ -44,9 +64,28 @@
     owner: root
     group: root
     mode: "0644"
+  when:
+    - ludus_panda_install_method == 'binary'
+    - ludus_panda_manage_profile_path
+
+- name: Source install method placeholder
+  ansible.builtin.fail:
+    msg: >-
+      Source install method selected, but compile tasks are not implemented yet.
+      Configure build variables in defaults/main.yml and add your build tasks.
+  when: ludus_panda_install_method == 'source'
+
+- name: Container install method placeholder
+  ansible.builtin.fail:
+    msg: >-
+      Container install method selected, but container runtime tasks are not implemented yet.
+      Use ludus_panda_container_runtime and ludus_panda_container_image when adding tasks.
+  when: ludus_panda_install_method == 'container'
 
 - name: Install pandare python package
   ansible.builtin.pip:
-    name: "{{ ludus_panda_pandare_package }}"
+    name: "{{ ludus_panda_pandare_package ~ (('==' ~ ludus_panda_pandare_version) if ludus_panda_pandare_version else '') }}"
     state: present
+    virtualenv: "{{ ludus_panda_virtualenv_path if ludus_panda_virtualenv_path else omit }}"
+    extra_args: "{{ ('--index-url ' ~ ludus_panda_pip_index_url) if ludus_panda_pip_index_url else omit }}"
   when: ludus_panda_install_pandare
