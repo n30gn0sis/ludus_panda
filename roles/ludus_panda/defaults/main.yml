@@ -1,4 +1,7 @@
 ---
+# Installation strategy: binary, source, or container.
+ludus_panda_install_method: "binary"
+
 # Version of PANDA to install. Set to "latest" to always pull the newest GitHub release.
 ludus_panda_version: "latest"
 
@@ -9,11 +12,20 @@ ludus_panda_arch: "amd64"
 # URL used to download PANDA release archives.
 ludus_panda_release_url: "https://github.com/panda-re/panda/releases/{{ 'latest/download' if ludus_panda_version == 'latest' else 'download/v' ~ ludus_panda_version }}/panda-{{ ludus_panda_version if ludus_panda_version != 'latest' else 'latest' }}-linux-{{ ludus_panda_arch }}.tar.gz"
 
+# Optional checksum for the release archive (e.g., sha256:...).
+ludus_panda_checksum: ""
+
+# Force reinstall by re-downloading and re-extracting artifacts.
+ludus_panda_force_reinstall: false
+
 # Installation path for PANDA binaries.
 ludus_panda_install_dir: "/opt/panda"
 
 # Directory exposed on PATH via profile script.
 ludus_panda_bin_dir: "{{ ludus_panda_install_dir }}/bin"
+
+# Whether to manage /etc/profile.d/panda.sh.
+ludus_panda_manage_profile_path: true
 
 # Whether to install build/runtime dependencies.
 ludus_panda_install_dependencies: true
@@ -26,8 +38,39 @@ ludus_panda_apt_packages:
   - python3
   - python3-pip
 
+# Source build repository and reference.
+ludus_panda_source_repo: "https://github.com/panda-re/panda.git"
+ludus_panda_source_ref: "master"
+ludus_panda_build_dir: "/usr/local/src/panda"
+ludus_panda_build_type: "Release"
+ludus_panda_build_jobs: "{{ ansible_processor_vcpus | default(2) }}"
+ludus_panda_build_targets: []
+ludus_panda_enable_plugins: []
+ludus_panda_disable_plugins: []
+
+# Additional apt dependencies for source builds.
+ludus_panda_source_apt_packages:
+  - git
+  - build-essential
+  - cmake
+  - ninja-build
+  - pkg-config
+
+# Container install placeholders.
+ludus_panda_container_image: "ghcr.io/panda-re/panda:latest"
+ludus_panda_container_runtime: "docker"
+
 # Whether to install pandare (Python bindings).
 ludus_panda_install_pandare: true
 
 # pip package spec for pandare.
 ludus_panda_pandare_package: "pandare"
+
+# Optional pin for pandare version (e.g., 1.9.0).
+ludus_panda_pandare_version: ""
+
+# Optional virtualenv path for pandare installation.
+ludus_panda_virtualenv_path: ""
+
+# Optional custom package index for pip.
+ludus_panda_pip_index_url: ""
