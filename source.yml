@@ -1,0 +1,8 @@
+---
+# repo-level metadata — the whole file is optional but manifest_version is required if present.
+# Ludus derives name from the URL and homepage from the git remote when fields are absent.
+
+manifest_version: 1
+name: "ludus_panda"
+description: "Ludus Ansible role for installing PANDA (Platform for Architecture-Neutral Dynamic Analysis) on Debian/Ubuntu targets."
+license: MIT
